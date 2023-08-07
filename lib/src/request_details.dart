@@ -14,7 +14,10 @@ class RequestDetails {
   final dynamic requestBody;
   final dynamic responseBody;
   late final DateTime sentTime;
+  final DateTime? receivedTime;
+
   RequestDetails({
+    String? id,
     String? requestName,
     required this.requestMethod,
     required this.url,
@@ -24,10 +27,11 @@ class RequestDetails {
     this.requestBody,
     this.responseBody,
     DateTime? sentTime,
+    this.receivedTime,
   }) {
     this.requestName = requestName?.toUpperCase() ?? _extractName(url);
     this.sentTime = sentTime ?? DateTime.now();
-    _id = _generateId();
+    _id = id ?? _generateId();
   }
 
   String _extractName(String url) {
@@ -44,6 +48,10 @@ class RequestDetails {
 
   String get id => _id;
 
+  Duration? get duration => receivedTime?.difference(sentTime);
+
+  bool get completed => receivedTime != null;
+
   RequestDetails copyWith({
     String? requestName,
     RequestMethod? requestMethod,
@@ -54,8 +62,10 @@ class RequestDetails {
     requestBody,
     responseBody,
     DateTime? sentTime,
+    DateTime? receivedTime,
   }) {
     return RequestDetails(
+      id: id,
       requestName: requestName ?? this.requestName,
       requestMethod: requestMethod ?? this.requestMethod,
       url: url ?? this.url,
@@ -65,12 +75,13 @@ class RequestDetails {
       requestBody: requestBody ?? this.requestBody,
       responseBody: responseBody ?? this.responseBody,
       sentTime: sentTime ?? this.sentTime,
+      receivedTime: receivedTime ?? this.receivedTime,
     );
   }
 
   @override
   String toString() {
-    return 'RequestDetails(requestName: $requestName, requestMethod: $requestMethod, url: $url, statusCode: $statusCode, headers: $headers, queryParameters: $queryParameters, requestBody: $requestBody, responseBody: $responseBody, sentTime: $sentTime)';
+    return 'RequestDetails(requestName: $requestName, requestMethod: $requestMethod, url: $url, statusCode: $statusCode, headers: $headers, queryParameters: $queryParameters, requestBody: $requestBody, responseBody: $responseBody, sentTime: $sentTime, receivedTime: $receivedTime )';
   }
 
   @override
@@ -78,6 +89,7 @@ class RequestDetails {
     if (identical(this, other)) return true;
 
     return other is RequestDetails &&
+        other.id == id &&
         other.requestName == requestName &&
         other.requestMethod == requestMethod &&
         other.url == url &&
@@ -86,12 +98,14 @@ class RequestDetails {
         other.queryParameters == queryParameters &&
         other.requestBody == requestBody &&
         other.responseBody == responseBody &&
-        other.sentTime == sentTime;
+        other.sentTime == sentTime &&
+        other.receivedTime == receivedTime;
   }
 
   @override
   int get hashCode {
-    return requestName.hashCode ^
+    return id.hashCode ^
+        requestName.hashCode ^
         requestMethod.hashCode ^
         url.hashCode ^
         statusCode.hashCode ^
@@ -99,7 +113,8 @@ class RequestDetails {
         queryParameters.hashCode ^
         requestBody.hashCode ^
         responseBody.hashCode ^
-        sentTime.hashCode;
+        sentTime.hashCode ^
+        receivedTime.hashCode;
   }
 
   Map<String, dynamic> toMap() {
@@ -113,6 +128,9 @@ class RequestDetails {
       'requestBody': requestBody,
       'responseBody': responseBody,
       'sentTime': sentTime.toIso8601String(),
+      'receivedTime': receivedTime?.toIso8601String(),
+      'duration': duration?.inMilliseconds,
+      'completed': completed,
     }..removeWhere((_, v) => v == null);
   }
 
@@ -128,6 +146,9 @@ class RequestDetails {
       requestBody: map['requestBody'] as dynamic,
       responseBody: map['responseBody'] as dynamic,
       sentTime: DateTime.parse(map['sentTime']),
+      receivedTime: map['receivedTime'] != null
+          ? DateTime.parse(map['receivedTime'] as String)
+          : null,
     );
   }
 

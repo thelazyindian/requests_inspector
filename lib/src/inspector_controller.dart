@@ -76,6 +76,39 @@ class InspectorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  RequestDetails? getRequestFromId(String id) {
+    if (!_enabled) return null;
+    final idx = _requestsList.indexWhere((element) => element.id == id);
+    if (idx >= 0) {
+      return _requestsList[idx];
+    }
+    return null;
+  }
+
+  void updateCompletedRequest(RequestDetails request) {
+    if (!_enabled) return;
+    final idx = _requestsList.indexWhere((element) => element.id == request.id);
+    if (idx >= 0 &&
+        _requestsList[idx].completed &&
+        _requestsList[idx].requestMethod == RequestMethod.WS) {
+      addNewRequest(RequestDetails(
+        requestName: _requestsList[idx].requestName,
+        requestMethod: _requestsList[idx].requestMethod,
+        url: _requestsList[idx].url,
+        statusCode: request.statusCode,
+        headers: _requestsList[idx].headers,
+        queryParameters: _requestsList[idx].queryParameters,
+        requestBody: _requestsList[idx].requestBody,
+        responseBody: request.responseBody,
+        sentTime: _requestsList[idx].receivedTime,
+        receivedTime: request.receivedTime,
+      ));
+    } else if (idx >= 0 && !_requestsList[idx].completed) {
+      _requestsList[idx] = request;
+    }
+    notifyListeners();
+  }
+
   void clearAllRequests() {
     if (_requestsList.isEmpty && _selectedRequest == null) return;
     _requestsList.clear();

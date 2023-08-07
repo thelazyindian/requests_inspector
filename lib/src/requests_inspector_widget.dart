@@ -285,7 +285,7 @@ class _RunAgainButtonState extends State<_RunAgainButton> {
               _setBusy();
               widget.onTap().whenComplete(_setReady);
             },
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('Run', style: TextStyle(color: Colors.white)),
@@ -316,11 +316,13 @@ class _RequestItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget child = ListTile(
-      tileColor: _request.statusCode == null
-          ? Colors.red[400]
-          : _request.statusCode! > 299
+      tileColor: _request.completed
+          ? _request.statusCode == null
               ? Colors.red[400]
-              : Colors.green[400],
+              : _request.statusCode! > 299
+                  ? Colors.red[400]
+                  : Colors.green[400]
+          : Colors.white,
       leading: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -339,12 +341,24 @@ class _RequestItemWidget extends StatelessWidget {
       ),
       title: Text(_request.requestName),
       subtitle: Text(_request.url),
-      trailing: Text(
-        _request.statusCode?.toString() ?? 'Err',
-        style: const TextStyle(
-          fontSize: 16.0,
-          fontWeight: FontWeight.bold,
-        ),
+      trailing: Column(
+        children: [
+          Text(
+            _request.statusCode?.toString() ?? 'Err',
+            style: const TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            _request.duration == null
+                ? 'PRG'
+                : '${_request.duration?.inMilliseconds}ms',
+            style: const TextStyle(
+              fontSize: 14.0,
+            ),
+          ),
+        ],
       ),
       onTap: () => _onTap(_request),
     );
@@ -387,6 +401,7 @@ class _RequestDetailsPage extends StatelessWidget {
           statusCode: request.statusCode,
         ),
         _buildRequestSentTime(request.sentTime),
+        _buildResponseDuration(request.duration),
         _buildTitle('URL'),
         _buildSelectableText(request.url),
         ..._buildHeadersBlock(request.headers),
@@ -457,6 +472,18 @@ class _RequestDetailsPage extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Text(
         'Sent at: $sentTimeText',
+        style: const TextStyle(fontSize: 16.0),
+      ),
+    );
+  }
+
+  Widget _buildResponseDuration(Duration? duration) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        duration == null
+            ? 'In progress'
+            : 'Completed in: ${duration.inMilliseconds} ms',
         style: const TextStyle(fontSize: 16.0),
       ),
     );
